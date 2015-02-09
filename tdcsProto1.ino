@@ -14,6 +14,7 @@ void setup() {
 //mainpump
 void loop() {
   LED_main();
+  Controller_main();
 }
 
 
