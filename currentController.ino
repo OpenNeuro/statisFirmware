@@ -17,17 +17,20 @@ enum CURRENTmode {
 CURRENTmode current = none;
 long targetCurrent = 0;//uA.
 long lastMeasuredCurrent = 0;//uA.
-int currentSetting = 0;
+int currentSetting = 0;//as in the setting presently, not the target current.
 
 
 
 
 void Controller_init()
 {
+  // initialize SPI:
+  SPI.begin(); 
   // set the slaveSelectPin as an output:
   pinMode (ADCSelectPin, OUTPUT);
+  //setup current supply/sink pins
   pinMode (Cathode_Pin, OUTPUT);
-  pinMode (Anode_Pin, INPUT);
+  pinMode (Anode_Pin, OUTPUT);
 }
 
 
@@ -39,30 +42,42 @@ void Controller_main()
   switch(current)
   {
     case none:
-      if (currentSetting != 0)
-        Digital_pot_write(ADCAddr,0);
+      if (currentSetting != 255)
+        Digital_pot_write(ADCAddr,255);
+      digitalWrite(Cathode_Pin, LOW);
       break;
       
     case minimum:
-      if (currentSetting != 0)
-        Digital_pot_write(ADCAddr,0);
+      if (currentSetting != 255)
+        Digital_pot_write(ADCAddr,255);
       Output_enable();
       break;
+    case feedback:
+      if (lastMeasuredCurrent < targetCurrent)
+        currentSetting = max(currentSetting-1, 0);
+      else if (lastMeasuredCurrent > targetCurrent)
+        currentSetting = min(currentSetting+1, 255);
+      Output_enable();
+      Digital_pot_write(ADCAddr,currentSetting);
+      Serial.println(lastMeasuredCurrent);
+      Serial.println(currentSetting);
+      delay(50);
   }
 }
 
 
 
 
-//Voltage diff / R = I
+//Voltage-drop / R = I
 //0.1% tolerance resistor should give a variation of +- 0.02mA
 //ADC should be able to measure voltage changes of 0.004V
 //TL;DR: it should work accurately.
 void Measure_current()
 {
-  long int diff = abs(analogRead(CurrentSense_1)  -  analogRead(CurrentSense_2)) * AREF_Voltage;    //change in potential as V/1024
-  float current = float(diff) / CS_Resistance / float(1024) * 1000;
-  lastMeasuredCurrent = current * 1000//mA -> uA therefore * 1000
+  long int drop = abs(analogRead(CurrentSense_1)  -  analogRead(CurrentSense_2)) * AREF_Voltage;//change in potential as V*1024
+  Serial.println(drop);
+  double current = float(drop) / CS_Resistance / float(1024) * 1000;
+  lastMeasuredCurrent = current * 1000;//mA -> uA therefore * 1000
 }
 
 
@@ -80,4 +95,19 @@ void Digital_pot_write(int address, int value) {
 void Output_enable()
 {
   digitalWrite(Cathode_Pin, HIGH);
+}
+
+long Controller_current()
+{
+  return lastMeasuredCurrent;
+}
+
+void Controller_set_current_target(long target)
+{
+  targetCurrent = target;
+}
+
+void Controller_set_mode(int mode)
+{
+  current = (CURRENTmode)mode;
 }

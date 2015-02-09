@@ -14,8 +14,8 @@ enum LEDstate {
   fastblink
 };
 
-LEDstate activeLED = off;
-LEDstate faultLED = off;
+LEDstate activeLED = fastblink;
+LEDstate faultLED = fastblink;
 LEDstate readyLED = fastblink;
 unsigned long lastFastBlink = 0;//millis()
 unsigned long lastSlowBlink = 0;//millis()
@@ -106,4 +106,27 @@ void LED_init()
   pinMode(FAULT_LED_PIN, OUTPUT);
   pinMode(ACTIVE_LED_PIN, OUTPUT);
   LED_main();//update LEDS
+}
+
+int LED_read(int led)
+{
+  switch(led)
+  {
+    case 0:
+      return (int)activeLED;
+    case 1:
+      return (int)readyLED;
+    case 2:
+      return (int)faultLED;
+  }
+}
+
+void LED_ready(int value){
+  readyLED = (LEDstate)value;
+}
+void LED_fault(int value){
+  faultLED = (LEDstate)value;
+}
+void LED_active(int value){
+  activeLED = (LEDstate)value;
 }
