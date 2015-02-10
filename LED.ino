@@ -108,6 +108,14 @@ void LED_init()
   LED_main();//update LEDS
 }
 
+
+
+
+
+
+///////////////////////////////////////
+// SETTERS / GETTERS - PUBLIC METHODS /
+///////////////////////////////////////
 int LED_read(int led)
 {
   switch(led)

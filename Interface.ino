@@ -108,7 +108,7 @@ void Interface_process_command(int opcode, int value)
       break;
    
    case OP_CURRENTMODE:
-      Serial.print(OP_SETCURRENT);
+      Serial.print(OP_CURRENTMODE);
       Serial.print(",");
       Controller_set_mode(value);
       Serial.println(value);

@@ -44,7 +44,7 @@ void Controller_main()
     case none:
       if (currentSetting != 255)
         Digital_pot_write(ADCAddr,255);
-      digitalWrite(Cathode_Pin, LOW);
+      Output_disable();
       break;
       
     case minimum:
@@ -59,9 +59,8 @@ void Controller_main()
         currentSetting = min(currentSetting+1, 255);
       Output_enable();
       Digital_pot_write(ADCAddr,currentSetting);
-      Serial.println(lastMeasuredCurrent);
-      Serial.println(currentSetting);
-      delay(50);
+      //Serial.println(lastMeasuredCurrent);
+      //Serial.println(currentSetting);
   }
 }
 
@@ -75,7 +74,6 @@ void Controller_main()
 void Measure_current()
 {
   long int drop = abs(analogRead(CurrentSense_1)  -  analogRead(CurrentSense_2)) * AREF_Voltage;//change in potential as V*1024
-  Serial.println(drop);
   double current = float(drop) / CS_Resistance / float(1024) * 1000;
   lastMeasuredCurrent = current * 1000;//mA -> uA therefore * 1000
 }
@@ -90,13 +88,24 @@ void Digital_pot_write(int address, int value) {
   SPI.transfer(value);
   // take the SS pin high to de-select the chip:
   digitalWrite(ADCSelectPin,HIGH); 
+  delay(5);
 }
+
 
 void Output_enable()
 {
   digitalWrite(Cathode_Pin, HIGH);
 }
 
+void Output_disable()
+{
+  digitalWrite(Cathode_Pin, LOW);
+}
+
+
+///////////////////////////////////////
+// SETTERS / GETTERS - PUBLIC METHODS /
+///////////////////////////////////////
 long Controller_current()
 {
   return lastMeasuredCurrent;
